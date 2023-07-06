@@ -25,15 +25,15 @@ where
     type Error = E;
 
     fn write_many(&mut self, reg: Registers, data: &[u8]) -> core::result::Result<(), E> {
-        let mut write = data.to_vec();
-        write.insert(0, reg.write());
+        let mut write = vec![reg.write()];
+        write.extend(data.iter().cloned());
         let mut operations = [Operation::Write(&write)];
         self.0.exec(&mut operations)
     }
 
     fn read_many(&mut self, reg: Registers, buffer: &mut [u8]) -> core::result::Result<(), E> {
-        let mut read = buffer.to_vec();
-        read.insert(0, reg.read());
+        let mut read = vec![reg.read()];
+        read.extend(buffer.iter().cloned());
         let mut operations = [Operation::Transfer(&mut read)];
         self.0.exec(&mut operations)?;
         buffer.copy_from_slice(&read[1..]);
@@ -49,14 +49,14 @@ where
     type Error = E;
 
     fn write_many(&mut self, reg: Registers, data: &[u8]) -> core::result::Result<(), E> {
-        let mut write = data.to_vec();
-        write.insert(0, reg.write());
+        let mut write = vec![reg.write()];
+        write.extend(data.iter().cloned());
         self.write(&write)
     }
 
     fn read_many(&mut self, reg: Registers, buffer: &mut [u8]) -> core::result::Result<(), E> {
-        let mut read = buffer.to_vec();
-        read.insert(0, reg.read());
+        let mut read = vec![reg.read()];
+        read.extend(buffer.iter().cloned());
         self.transfer(&mut read)?;
         buffer.copy_from_slice(&read[1..]);
         Ok(())
