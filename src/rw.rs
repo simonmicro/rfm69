@@ -25,15 +25,18 @@ where
     type Error = E;
 
     fn write_many(&mut self, reg: Registers, data: &[u8]) -> core::result::Result<(), E> {
-        let write = [reg.write()];
-        let mut operations = [Operation::Write(&write), Operation::Write(data)];
-        self.0.exec(&mut operations)
+        let mut write = [reg.write(), data[0]]; // TODO, use ALL data
+        let mut operations = [Operation::Transfer(&mut write)];
+        self.0.exec(&mut operations)?;
+        Ok(())
     }
 
     fn read_many(&mut self, reg: Registers, buffer: &mut [u8]) -> core::result::Result<(), E> {
-        let read = [reg.read()];
-        let mut operations = [Operation::Write(&read), Operation::Transfer(buffer)];
-        self.0.exec(&mut operations)
+        let mut read = [reg.read(), buffer[0]]; // TODO, use ALL buffer
+        let mut operations = [Operation::Transfer(&mut read)];
+        self.0.exec(&mut operations)?;
+        buffer[0] = read[1];
+        Ok(())
     }
 }
 
@@ -45,14 +48,15 @@ where
     type Error = E;
 
     fn write_many(&mut self, reg: Registers, data: &[u8]) -> core::result::Result<(), E> {
-        self.write(&[reg.write()])?;
-        self.write(data)?;
+        let mut write = [reg.write(), data[0]]; // TODO, use ALL data
+        self.transfer(&mut write)?;
         Ok(())
     }
 
     fn read_many(&mut self, reg: Registers, buffer: &mut [u8]) -> core::result::Result<(), E> {
-        self.write(&[reg.read()])?;
-        self.transfer(buffer)?;
+        let mut read = [reg.read(), buffer[0]]; // TODO, use ALL buffer
+        self.transfer(&mut read)?;
+        buffer[0] = read[1];
         Ok(())
     }
 }
